@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jumper: your first Arduino projects</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2F5; --panel:#FFFFFF; --ink:#15202B; --muted:#56687A; --line:#D5DDE4; --line-strong:#B9C5CF;
+  --mat:#2C5873; --accent:#F2B53A; --on-accent:#2A1D00; --ok:#2E8F5B; --bad:#C9463D; --link:#1D6BA6;
+  --code-bg:#0F1A24; --code-ink:#D8E4EF;
+  --head:'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --body:'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F151B; --panel:#17212A; --ink:#E5ECF2; --muted:#98A8B6; --line:#2A3743; --line-strong:#3C4C5A;
+    --mat:#1F4459; --ok:#4CC38A; --bad:#F07167; --link:#72B8EC; --code-bg:#0A1118;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F151B; --panel:#17212A; --ink:#E5ECF2; --muted:#98A8B6; --line:#2A3743; --line-strong:#3C4C5A;
+  --mat:#1F4459; --ok:#4CC38A; --bad:#F07167; --link:#72B8EC; --code-bg:#0A1118;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+a{color:var(--link)}
+:focus-visible{outline:3px solid var(--link);outline-offset:2px;border-radius:4px}
+h1,h2,h3{font-family:var(--head);line-height:1.1;margin:0;letter-spacing:-.01em}
+code{font-family:var(--mono);font-size:.88em;background:color-mix(in srgb,var(--line) 55%,transparent);padding:1px 5px;border-radius:4px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+button{font:inherit;cursor:pointer}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--head);font-weight:800;font-size:24px}
+.logo svg{width:34px;height:22px}
+.nav{display:flex;gap:6px}
+.nav a{color:var(--ink);text-decoration:none;padding:8px 12px;border-radius:8px;font-weight:700;font-size:15px}
+.nav a[aria-current="page"]{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line)}
+
+/* mat + scene */
+.mat{background-color:var(--mat);background-image:radial-gradient(rgba(255,255,255,.09) 1px,transparent 1.2px);background-size:14px 14px;border-radius:16px;padding:10px}
+svg.scene{display:block;width:100%;height:auto;max-height:62vh}
+.el.is-new{filter:drop-shadow(0 0 3px rgba(242,181,58,1)) drop-shadow(0 0 6px rgba(242,181,58,.7))}
+.led-glow{opacity:0}
+.lit .led-glow{opacity:1}
+.a-blink{animation:blink 2s step-end infinite}
+.a-fast{animation:blink .4s step-end infinite}
+.a-tlg{animation:tlg 12s step-end infinite}
+.a-tly{animation:tly 12s step-end infinite}
+.a-tlr{animation:tlr 12s step-end infinite}
+@keyframes blink{0%{opacity:1}50%{opacity:0}}
+@keyframes tlg{0%{opacity:1}41.667%{opacity:0}}
+@keyframes tly{0%{opacity:0}41.667%{opacity:1}58.333%{opacity:0}}
+@keyframes tlr{0%{opacity:0}58.333%{opacity:1}100%{opacity:1}}
+.a-sweep-pot{transform-box:fill-box;transform-origin:center;animation:potsweep 5s ease-in-out infinite alternate}
+.a-sweep-horn{transform-box:fill-box;transform-origin:center;animation:hornsweep 5s ease-in-out infinite alternate}
+@keyframes potsweep{from{transform:rotate(-135deg)}to{transform:rotate(135deg)}}
+@keyframes hornsweep{from{transform:rotate(-90deg)}to{transform:rotate(90deg)}}
+.ring-pulse{transform-box:fill-box;transform-origin:center;animation:ring 1.6s ease-out infinite}
+@keyframes ring{0%{transform:scale(.7);opacity:1}100%{transform:scale(2.1);opacity:0}}
+[data-press]{cursor:pointer}
+[data-press]:focus-visible{outline:none}
+[data-press]:focus-visible .btn-cap{stroke:#72B8EC;stroke-width:3}
+.btn-cap{transform-box:fill-box;transform-origin:center;transition:transform .08s}
+.pressed .btn-cap{transform:scale(.86)}
+@media (prefers-reduced-motion: reduce){
+  .a-blink,.a-fast,.a-tlg,.a-tly,.a-tlr{animation:none;opacity:1}
+  .a-sweep-pot,.a-sweep-horn,.ring-pulse{animation:none}
+}
+
+/* home */
+.hero{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.25fr);gap:44px;align-items:center;padding:28px 0 56px}
+.hero h1{font-size:clamp(36px,5.2vw,62px);font-weight:800;line-height:1.02;letter-spacing:-.025em}
+.hero p{font-size:19px;color:var(--muted);max-width:34ch;margin:20px 0 28px}
+.hero .mat{padding:14px}
+.hero-cap{color:var(--muted);font-size:14px;margin:10px 4px 0}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;padding:12px 18px;font-weight:700;text-decoration:none;font-size:16px}
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-quiet{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-strong)}
+.btn-quiet:hover{background:var(--panel)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+
+.section-head{display:flex;justify-content:space-between;align-items:baseline;gap:20px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.section-head h2{font-size:28px;font-weight:800}
+.section-head p{margin:0;color:var(--muted);font-size:15px}
+.path{list-style:none;margin:0 0 40px;padding:0}
+.path a{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:20px;align-items:center;padding:22px 8px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);border-radius:4px}
+.path a:hover{background:var(--panel)}
+.path .num{font-family:var(--head);font-weight:800;font-size:44px;line-height:1;color:var(--line-strong);text-align:center}
+.path .done .num{color:var(--ok)}
+.path h3{font-size:22px;font-weight:800}
+.path .desc{margin:4px 0 8px;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:13px;padding:3px 9px;border-radius:999px;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
+.status{font-size:14px;font-weight:700;color:var(--muted);white-space:nowrap}
+.status.is-done{color:var(--ok)}
+.foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--muted);font-size:14px;padding:20px 0 48px}
+.linkbtn{background:none;border:0;color:var(--link);text-decoration:underline;padding:0;font-size:14px}
+
+/* work view */
+.work{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,1fr);gap:24px;align-items:start;padding:4px 0 48px}
+.bench{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.bench-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 2px 10px;flex-wrap:wrap}
+.crumb{font-size:15px;color:var(--muted)}
+.crumb a{color:var(--muted)}
+.crumb b{color:var(--ink)}
+.legend{display:flex;gap:14px;font-size:13px;color:var(--muted);margin:10px 4px 0;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:18px;height:5px;border-radius:3px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px 24px}
+.stepper{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.stepper a{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--line)}
+.stepper a.is-past{color:var(--ink);background:color-mix(in srgb,var(--line) 70%,transparent);box-shadow:none}
+.stepper a[aria-current="step"]{background:var(--accent);color:var(--on-accent);box-shadow:none}
+.count{font-size:14px;color:var(--muted);margin:0 0 4px}
+.panel h2{font-size:28px;font-weight:800;margin-bottom:12px}
+.body p{margin:0 0 12px;max-width:62ch}
+.body b{font-weight:700}
+.hole{font-family:var(--mono);font-weight:600;font-size:.9em;background:var(--accent);color:var(--on-accent);padding:1px 6px;border-radius:5px;white-space:nowrap}
+.tip{font-size:15px;color:var(--muted);border-left:3px solid var(--line-strong);padding:2px 0 2px 12px;margin:14px 0}
+.why{margin:16px 0;border-top:1px solid var(--line);padding-top:12px}
+.why summary{cursor:pointer;font-weight:700;list-style:none;display:flex;align-items:center;gap:8px}
+.why summary::-webkit-details-marker{display:none}
+.why summary::before{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+.why[open] summary::before{transform:rotate(45deg)}
+.why div{padding:8px 0 0 16px;color:var(--muted)}
+.checklist{list-style:none;padding:0;margin:14px 0}
+.checklist label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;cursor:pointer}
+.checklist input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ok);flex:none}
+.code{margin:14px 0;border-radius:12px;overflow:hidden;background:var(--code-bg)}
+.code-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 8px 14px;color:#9FB2C3;font-size:13px}
+.code-bar button{background:#22384B;color:#E7F0F7;border:0;border-radius:7px;padding:6px 12px;font-weight:700;font-size:13px}
+.code pre{margin:0;padding:4px 16px 16px;overflow-x:auto;color:var(--code-ink);font:13.5px/1.6 var(--mono)}
+.expect{margin:14px 0;padding:12px 14px;border-radius:12px;box-shadow:inset 0 0 0 1.5px var(--line)}
+.expect h3{font-family:var(--body);font-size:15px;margin:0 0 6px}
+.expect pre{margin:0;font:13px/1.55 var(--mono);color:var(--muted);overflow-x:auto}
+.check{margin:18px 0 6px;padding:16px;border-radius:12px;box-shadow:inset 0 0 0 2px var(--line)}
+.check.is-yes{box-shadow:inset 0 0 0 2px var(--ok)}
+.check.is-no{box-shadow:inset 0 0 0 2px var(--accent)}
+.check-q{font-weight:700;margin:0 0 12px}
+.check .btn{padding:10px 16px;font-size:15px}
+.btn-yes{background:var(--ok);color:#fff}
+.result{margin-top:14px}
+.result p{margin:0 0 10px}
+.fixes{margin:6px 0 14px;padding-left:22px}
+.fixes li{margin-bottom:10px;padding-left:4px}
+.fixes b{display:block}
+.fixes span{color:var(--muted)}
+.win{font-weight:700;color:var(--ok)}
+.stepnav{display:flex;justify-content:space-between;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+
+/* parts */
+.parts{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:28px 32px;margin:24px 0 48px}
+.part{display:grid;grid-template-columns:130px minmax(0,1fr);gap:16px;align-items:start}
+.part .mat{padding:8px;aspect-ratio:1/1;display:grid;place-items:center}
+.part .mat svg{width:100%;height:auto;max-height:100%}
+.part h3{font-size:20px;font-weight:800;margin-bottom:6px}
+.part dl{margin:0;font-size:15px}
+.part dt{font-weight:700;margin-top:6px}
+.part dd{margin:0;color:var(--muted)}
+
+@media (max-width: 900px){
+  .hero{grid-template-columns:1fr;gap:28px;padding-top:12px}
+  .work{grid-template-columns:1fr}
+  .bench{top:0;z-index:5;background:var(--bg);padding-top:calc(env(safe-area-inset-top,0px) + 6px);padding-bottom:8px;margin:0 -20px;padding-left:12px;padding-right:12px}
+  .legend{display:none}
+  .path a{grid-template-columns:48px minmax(0,1fr);gap:14px}
+  .path .num{font-size:32px}
+  .path .status{grid-column:2}
+}
+@media (max-width: 480px){
+  .panel{padding:18px 16px 20px;border-radius:14px}
+  .panel h2{font-size:24px}
+  .part{grid-template-columns:96px minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="#/" aria-label="Jumper home">
+      <svg viewBox="0 0 34 22" aria-hidden="true"><path d="M4 18 C4 2, 30 2, 30 18" fill="none" stroke="#F2B53A" stroke-width="4" stroke-linecap="round"/><rect x="1.5" y="16" width="5" height="5" rx="1" fill="currentColor"/><rect x="27.5" y="16" width="5" height="5" rx="1" fill="currentColor"/></svg>
+      Jumper
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#/" data-nav="home">Projects</a>
+      <a href="#/parts" data-nav="parts">Parts</a>
+    </nav>
+  </header>
+  <main id="app"></main>
+</div>
+
+<script>
+/* ===================== Geometry ===================== */
+const X0 = 380, P = 16;
+const ROWS = {tn:92,tp:108,a:136,b:152,c:168,d:184,e:200,f:232,g:248,h:264,i:280,j:296,bp:324,bn:340};
+const TOP_ROWS = ['tn','tp','a','b','c','d','e'];
+const RAIL_NAMES = {tn:'− rail', tp:'+ rail', bp:'+ rail', bn:'− rail'};
+function hole(c, r){ return {x: X0 + (c-1)*P, y: ROWS[r]}; }
+
+const PINS = {};
+[['SCL','SCL',96],['SDA','SDA',108],['AREF','AREF',120],['GND_T','GND',132],['D13','13',144],['D12','12',156],['D11','11',168],['D10','10',180],['D9','9',192],['D8','8',204],['D7','7',220],['D6','6',232],['D5','5',244],['D4','4',256],['D3','3',268],['D2','2',280],['D1','1',292],['D0','0',304]]
+  .forEach(([id,lab,x]) => PINS[id] = {x, y:86, side:'top', lab, label: /^\d+$/.test(lab) ? 'Pin ' + lab : lab});
+[['IOREF','IOREF',142],['RESET','RESET',154],['3V3','3.3V',166],['5V','5V',178],['GND_B1','GND',190],['GND_B2','GND',202],['VIN','VIN',214],['A0','A0',232],['A1','A1',244],['A2','A2',256],['A3','A3',268],['A4','A4',280],['A5','A5',292]]
+  .forEach(([id,lab,x]) => PINS[id] = {x, y:284, side:'bot', lab, label: lab});
+
+const SPOTS = {
+  usb:   {x:31,  y:118, label:'USB port', dy:-30},
+  onled: {x:293, y:148, label:'ON light', dy:-16},
+  lled:  {x:135, y:120, label:'L light',  dy:20}
+};
+const SERVO = {x:686, y:416};
+const SERVO_PINS = {gnd:{x:686,y:404,label:'Brown'}, vcc:{x:686,y:416,label:'Red'}, sig:{x:686,y:428,label:'Orange'}};
+
+const WIRE = {red:'#D93A34', black:'#2A2A2A', yellow:'#E9B824', orange:'#EC7A1C', blue:'#2F6FD6', purple:'#8B4FD1', green:'#2FA14E'};
+const LEDC = {red:'#E8322D', yellow:'#F7C325', green:'#33C46A'};
+
+/* ===================== Drawing ===================== */
+const f1 = n => Math.round(n*10)/10;
+
+function drawArduino(powered, anim){
+  anim = anim || {};
+  let s = '';
+  s += `<rect x="20" y="70" width="300" height="230" rx="10" fill="#137C83" stroke="#0B5C62" stroke-width="2"/>`;
+  s += `<circle cx="34" cy="288" r="5" fill="#0C5055"/><circle cx="310" cy="104" r="5" fill="#0C5055"/><circle cx="310" cy="270" r="5" fill="#0C5055"/>`;
+  s += `<rect x="4" y="96" width="54" height="44" rx="2" fill="#C2C8CD" stroke="#8C949A"/><rect x="12" y="104" width="30" height="28" fill="#9AA2A8"/>`;
+  s += `<rect x="4" y="238" width="46" height="40" rx="3" fill="#1C1C1C"/><circle cx="28" cy="258" r="9" fill="#333"/>`;
+  s += `<rect x="64" y="77" width="16" height="16" rx="2" fill="#CFCFCF"/><circle cx="72" cy="85" r="4.5" fill="#B7372F"/>`;
+  s += `<rect x="150" y="196" width="150" height="34" rx="2" fill="#1A1A1A"/>`;
+  for (let i=0;i<14;i++){ const x = 156 + i*10.3; s += `<rect x="${f1(x)}" y="192" width="3" height="4" fill="#C5C5C5"/><rect x="${f1(x)}" y="230" width="3" height="4" fill="#C5C5C5"/>`; }
+  s += `<text x="68" y="186" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="24" fill="#fff" opacity=".9">UNO</text>`;
+  s += `<rect x="90" y="80" width="120" height="12" fill="#151515"/><rect x="214" y="80" width="96" height="12" fill="#151515"/>`;
+  s += `<rect x="136" y="278" width="84" height="12" fill="#151515"/><rect x="226" y="278" width="72" height="12" fill="#151515"/>`;
+  for (const id in PINS){
+    const p = PINS[id];
+    s += `<rect x="${p.x-2.5}" y="${p.y-2.5}" width="5" height="5" fill="#3E3E3E"/>`;
+    if (p.side === 'top') s += `<text x="${p.x+2.2}" y="98" transform="rotate(-90 ${p.x+2.2} 98)" text-anchor="end" font-size="6" fill="#fff" opacity=".85" font-family="sans-serif">${p.lab}</text>`;
+    else s += `<text x="${p.x+2.2}" y="272" transform="rotate(-90 ${p.x+2.2} 272)" font-size="6" fill="#fff" opacity=".85" font-family="sans-serif">${p.lab}</text>`;
+  }
+  s += `<rect x="131" y="118" width="8" height="4" fill="#5B4A1F"/>`;
+  s += `<rect class="led-glow ${anim.lled ? 'a-'+anim.lled : ''}" x="131" y="118" width="8" height="4" fill="#FFC23A" style="filter:drop-shadow(0 0 4px #FFB300)"/>`;
+  s += `<text x="143" y="123" font-size="6" fill="#fff" font-family="sans-serif">L</text>`;
+  s += `<rect x="289" y="146" width="8" height="4" fill="${powered ? '#48E27A' : '#1E4D2E'}" ${powered ? 'style="filter:drop-shadow(0 0 4px #48E27A)"' : ''}/>`;
+  s += `<text x="285" y="150.5" text-anchor="end" font-size="6" fill="#fff" font-family="sans-serif">ON</text>`;
+  return s;
+}
+
+function drawBreadboard(){
+  let s = `<rect x="360" y="74" width="504" height="284" rx="8" fill="#F3F3EE" stroke="#CFCFC6" stroke-width="1.5"/>`;
+  s += `<rect x="366" y="211" width="492" height="10" rx="2" fill="#E1E1DA"/>`;
+  s += `<line x1="374" y1="83" x2="850" y2="83" stroke="#3B6FD8" stroke-width="1.6"/><line x1="374" y1="117" x2="850" y2="117" stroke="#D8413B" stroke-width="1.6"/>`;
+  s += `<line x1="374" y1="315" x2="850" y2="315" stroke="#D8413B" stroke-width="1.6"/><line x1="374" y1="349" x2="850" y2="349" stroke="#3B6FD8" stroke-width="1.6"/>`;
+  for (const [r,sym,col] of [['tn','−','#3B6FD8'],['tp','+','#D8413B'],['bp','+','#D8413B'],['bn','−','#3B6FD8']]){
+    s += `<text x="367" y="${ROWS[r]+3}" font-size="10" font-weight="700" text-anchor="middle" fill="${col}" font-family="sans-serif">${sym}</text>`;
+    s += `<text x="857" y="${ROWS[r]+3}" font-size="10" font-weight="700" text-anchor="middle" fill="${col}" font-family="sans-serif">${sym}</text>`;
+  }
+  let holes = '';
+  for (let c=1;c<=30;c++) for (const r in ROWS){ const h = hole(c,r); holes += `M${f1(h.x-2.2)} ${f1(h.y-2.2)}h4.4v4.4h-4.4z`; }
+  s += `<path d="${holes}" fill="#6F7275"/>`;
+  for (const c of [1,5,10,15,20,25,30]){
+    const x = hole(c,'a').x;
+    s += `<text x="${x}" y="127" font-size="6.5" text-anchor="middle" fill="#8A8D90" font-family="sans-serif">${c}</text>`;
+    s += `<text x="${x}" y="311" font-size="6.5" text-anchor="middle" fill="#8A8D90" font-family="sans-serif">${c}</text>`;
+  }
+  for (const r of 'abcdefghij'){
+    s += `<text x="368" y="${ROWS[r]+2.5}" font-size="7" text-anchor="middle" fill="#8A8D90" font-family="sans-serif">${r}</text>`;
+    s += `<text x="856" y="${ROWS[r]+2.5}" font-size="7" text-anchor="middle" fill="#8A8D90" font-family="sans-serif">${r}</text>`;
+  }
+  return s;
+}
+
+function drawStrip(st){
+  if (st.rail){
+    const y = ROWS[st.rail];
+    return `<rect x="372" y="${y-7}" width="480" height="14" rx="5" fill="rgba(242,181,58,.38)" stroke="#E0A21F" stroke-width="1.5"/>`;
+  }
+  const x = hole(st.col,'a').x, y1 = ROWS[st.from], y2 = ROWS[st.to];
+  return `<rect x="${x-7}" y="${y1-7}" width="14" height="${y2-y1+14}" rx="5" fill="rgba(242,181,58,.38)" stroke="#E0A21F" stroke-width="1.5"/>`;
+}
+
+function drawLED(pa, pc, color, animCls){
+  const cx = (pa.x+pc.x)/2, cy = Math.min(pa.y,pc.y) - 14;
+  const flatX = pc.x > pa.x ? cx + 9.5 : cx - 9.5;
+  let s = '';
+  s += `<path d="M${pa.x} ${pa.y} L${cx-4} ${cy+7} M${pc.x} ${pc.y} L${cx+4} ${cy+7}" stroke="#9AA3AA" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="10.5" fill="${color}" fill-opacity=".45" stroke="${color}" stroke-width="1.5"/>`;
+  s += `<circle class="led-glow ${animCls ? 'a-'+animCls : ''}" cx="${cx}" cy="${cy}" r="10.5" fill="${color}" style="filter:drop-shadow(0 0 7px ${color}) drop-shadow(0 0 3px ${color})"/>`;
+  s += `<circle cx="${cx-3}" cy="${cy-3}" r="3" fill="#fff" opacity=".55"/>`;
+  s += `<line x1="${flatX}" y1="${cy-6}" x2="${flatX}" y2="${cy+6}" stroke="#333" stroke-width="1.6"/>`;
+  s += `<text x="${pa.x - (pc.x > pa.x ? 6 : -6)}" y="${pa.y-5}" font-size="9" font-weight="700" text-anchor="middle" fill="#C0392B" font-family="sans-serif">+</text>`;
+  return s;
+}
+
+const BAND = {red:'#C62828', brown:'#6D4C2F', gold:'#C9A227', black:'#222', orange:'#EF7C1A'};
+function drawRes(p1, p2, bands){
+  bands = bands || ['red','red','brown','gold'];
+  const dx = p2.x-p1.x, dy = p2.y-p1.y, d = Math.hypot(dx,dy);
+  const ang = Math.atan2(dy,dx)*180/Math.PI, mx = (p1.x+p2.x)/2, my = (p1.y+p2.y)/2;
+  const L = Math.min(30, d-10);
+  let s = `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#A7ADB3" stroke-width="1.8" stroke-linecap="round"/>`;
+  s += `<g transform="translate(${f1(mx)} ${f1(my)}) rotate(${f1(ang)})"><rect x="${-L/2}" y="-5.5" width="${L}" height="11" rx="5" fill="#E3C999" stroke="#B89B62"/>`;
+  const offs = [-L/2+6, -L/2+10.5, -L/2+15, L/2-6];
+  bands.forEach((b,i) => s += `<rect x="${f1(offs[i]-1.4)}" y="-5.5" width="2.8" height="11" fill="${BAND[b]}"/>`);
+  s += `</g>`;
+  return s;
+}
+
+function drawButton(o){
+  let s = `<rect x="${o.x-8}" y="${o.y-7}" width="48" height="46" rx="3" fill="#2E3035" stroke="#1C1D20"/>`;
+  s += `<circle class="btn-cap" cx="${o.x+16}" cy="${o.y+16}" r="12" fill="#17181B" stroke="#4A4D52" stroke-width="1.5"/>`;
+  for (const [dx,dy] of [[0,0],[32,0],[0,32],[32,32]]) s += `<rect x="${o.x+dx-2.5}" y="${o.y+dy-2.5}" width="5" height="5" fill="#B9BEC3"/>`;
+  return s;
+}
+
+function drawPot(o, animCls){
+  const cx = o.x+16, cy = o.y+34;
+  let s = '';
+  for (let i=0;i<3;i++) s += `<line x1="${o.x+i*16}" y1="${o.y}" x2="${o.x+i*16}" y2="${o.y+14}" stroke="#A7ADB3" stroke-width="2"/><rect x="${o.x+i*16-2.5}" y="${o.y-2.5}" width="5" height="5" fill="#B9BEC3"/>`;
+  s += `<rect x="${cx-20}" y="${cy-20}" width="40" height="40" rx="6" fill="#2556A8" stroke="#183D7A"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="14" fill="#DCE0E4" stroke="#9EA6AD"/>`;
+  s += `<g class="${animCls ? 'a-'+animCls : ''}"><circle cx="${cx}" cy="${cy}" r="14" fill="transparent"/><line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy-11}" stroke="#333" stroke-width="3" stroke-linecap="round"/></g>`;
+  return s;
+}
+
+function drawUS(o){
+  const cx = o.x+24;
+  let s = `<rect x="${cx-56}" y="${o.y-86}" width="112" height="76" rx="4" fill="#1F5AA8" stroke="#123E78"/>`;
+  for (const ex of [-28,28]) s += `<circle cx="${cx+ex}" cy="${o.y-54}" r="21" fill="#C9CDD2" stroke="#8E959C" stroke-width="2"/><circle cx="${cx+ex}" cy="${o.y-54}" r="14" fill="#8E969D"/>`;
+  ['VCC','Trig','Echo','Gnd'].forEach((t,i) => {
+    const x = o.x+i*16;
+    s += `<line x1="${x}" y1="${o.y-10}" x2="${x}" y2="${o.y}" stroke="#B9BEC3" stroke-width="2.5"/>`;
+    s += `<text x="${x}" y="${o.y-14}" font-size="6" fill="#fff" text-anchor="middle" font-family="sans-serif">${t}</text>`;
+  });
+  return s;
+}
+
+function drawServo(x, y, animCls){
+  let s = `<rect x="${x-2}" y="${y-18}" width="14" height="36" rx="2" fill="#222"/>`;
+  [['#6B4226',-12,-6],['#D93A34',0,0],['#EC7A1C',12,6]].forEach(([c,a,b]) => s += `<path d="M${x+12} ${y+a} C${x+24} ${y+a} ${x+24} ${y+b} ${x+36} ${y+b}" stroke="${c}" stroke-width="3" fill="none"/>`);
+  s += `<rect x="${x+30}" y="${y-8}" width="124" height="16" rx="3" fill="#2B63B8" opacity=".75"/>`;
+  s += `<rect x="${x+36}" y="${y-23}" width="110" height="46" rx="4" fill="#2F6CC6" stroke="#1D4C93"/>`;
+  const sx = x+120, sy = y;
+  s += `<g class="${animCls ? 'a-'+animCls : ''}"><circle cx="${sx}" cy="${sy}" r="32" fill="transparent"/><rect x="${sx-5}" y="${sy-30}" width="10" height="34" rx="5" fill="#F1F1F1" stroke="#BFC3C7"/></g>`;
+  s += `<circle cx="${sx}" cy="${sy}" r="6" fill="#FFFFFF" stroke="#BFC3C7"/>`;
+  return s;
+}
+
+function ep(e){
+  if (typeof e === 'string'){ const p = PINS[e]; return {x:p.x, y:p.y, n:[0, p.side==='top' ? -1 : 1], kind:'pin'}; }
+  if (Array.isArray(e)){ const h = hole(e[0],e[1]); return {x:h.x, y:h.y, n:[0, TOP_ROWS.includes(e[1]) ? -1 : 1], kind:'bb'}; }
+  const s = SERVO_PINS[e.servo]; return {x:s.x, y:s.y, n:[-1,0], kind:'servo'};
+}
+function wireGeom(w){
+  const a = ep(w.from), b = ep(w.to);
+  if (w.n1) a.n = w.n1; if (w.n2) b.n = w.n2;
+  const d = Math.hypot(b.x-a.x, b.y-a.y);
+  if (a.kind === 'bb' && b.kind === 'bb'){
+    const mx = (a.x+b.x)/2, my = (a.y+b.y)/2, px = -(b.y-a.y)/d, py = (b.x-a.x)/d, k = d*0.18;
+    const q = {x: mx + px*k*(px>0?-1:1), y: my - Math.abs(py)*k};
+    return {a, b, q};
+  }
+  const k = Math.max(28, Math.min(100, d*0.4));
+  return {a, b, c1:{x:a.x+a.n[0]*k, y:a.y+a.n[1]*k}, c2:{x:b.x+b.n[0]*k, y:b.y+b.n[1]*k}};
+}
+function wireSamples(g){
+  const pts = [];
+  for (const t of [0,.25,.5,.75,1]){
+    const u = 1-t;
+    if (g.q) pts.push({x:u*u*g.a.x+2*u*t*g.q.x+t*t*g.b.x, y:u*u*g.a.y+2*u*t*g.q.y+t*t*g.b.y});
+    else pts.push({x:u*u*u*g.a.x+3*u*u*t*g.c1.x+3*u*t*t*g.c2.x+t*t*t*g.b.x, y:u*u*u*g.a.y+3*u*u*t*g.c1.y+3*u*t*t*g.c2.y+t*t*t*g.b.y});
+  }
+  return pts;
+}
+function drawWire(w){
+  const g = wireGeom(w);
+  const d = g.q ? `M${g.a.x} ${g.a.y} Q${f1(g.q.x)} ${f1(g.q.y)} ${g.b.x} ${g.b.y}`
+                : `M${g.a.x} ${g.a.y} C${f1(g.c1.x)} ${f1(g.c1.y)} ${f1(g.c2.x)} ${f1(g.c2.y)} ${g.b.x} ${g.b.y}`;
+  const col = WIRE[w.color];
+  let s = `<path d="${d}" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="6.5" stroke-linecap="round"/>`;
+  s += `<path d="${d}" fill="none" stroke="${col}" stroke-width="4.4" stroke-linecap="round"/>`;
+  s += `<path d="${d}" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="1.2" stroke-linecap="round" transform="translate(-.8 -.8)"/>`;
+  for (const p of [g.a, g.b]) s += `<circle cx="${p.x}" cy="${p.y}" r="2.8" fill="#D2D7DC" stroke="#555" stroke-width=".8"/>`;
+  return s;
+}
+
+function drawEl(el, animCls){
+  switch (el.type){
+    case 'led': return drawLED(hole(...el.a), hole(...el.c), LEDC[el.color], animCls);
+    case 'res': return drawRes(hole(...el.p1), hole(...el.p2), el.bands);
+    case 'button': return drawButton(hole(el.c,'e'));
+    case 'pot': return drawPot(hole(el.c,'f'), animCls);
+    case 'hcsr04': return drawUS(hole(el.c,'a'));
+    case 'servo': return drawServo(SERVO.x, SERVO.y, animCls);
+    case 'wire': return drawWire(el);
+  }
+  return '';
+}
+function elPoints(el){
+  switch (el.type){
+    case 'led': return [hole(...el.a), hole(...el.c), {x:hole(...el.a).x, y:hole(...el.a).y-26}];
+    case 'res': return [hole(...el.p1), hole(...el.p2)];
+    case 'button': { const o = hole(el.c,'e'); return [{x:o.x-8,y:o.y-8},{x:o.x+40,y:o.y+40}]; }
+    case 'pot': { const o = hole(el.c,'f'); return [{x:o.x-6,y:o.y},{x:o.x+38,y:o.y+56}]; }
+    case 'hcsr04': { const o = hole(el.c,'a'); return [{x:o.x-32,y:o.y-88},{x:o.x+80,y:o.y}]; }
+    case 'servo': return [{x:SERVO.x-4,y:SERVO.y-40},{x:SERVO.x+150,y:SERVO.y+40}];
+    case 'wire': return wireSamples(wireGeom(el));
+  }
+  return [];
+}
+
+function focusInfo(f){
+  if (typeof f === 'string'){
+    if (PINS[f]) { const p = PINS[f]; return {x:p.x, y:p.y, label:p.label, dy: p.side==='top' ? -16 : 18}; }
+    const s = SPOTS[f]; return {x:s.x, y:s.y, label:s.label, dy:s.dy};
+  }
+  if (Array.isArray(f)){
+    const h = hole(f[0],f[1]);
+    const label = RAIL_NAMES[f[1]] || (f[1] + f[0]);
+    const below = ['a','b','c','d','e','bp','bn'].includes(f[1]);
+    return {x:h.x, y:h.y, label, dy: below ? 16 : -16};
+  }
+  const s = SERVO_PINS[f.servo]; return {x:s.x, y:s.y, label:s.label, dx:-30, dy:0};
+}
+function drawFocus(list){
+  let rings = '', tags = '';
+  const placed = [];
+  for (const f of list){
+    const fi = focusInfo(f);
+    rings += `<circle cx="${fi.x}" cy="${fi.y}" r="6.5" fill="none" stroke="#F2B53A" stroke-width="2.4"/>`;
+    rings += `<circle class="ring-pulse" cx="${fi.x}" cy="${fi.y}" r="6.5" fill="none" stroke="#F2B53A" stroke-width="2"/>`;
+    const w = fi.label.length*5.4 + 12, h = 15;
+    let lx = fi.x + (fi.dx||0) - w/2, ly = fi.y + fi.dy - h/2;
+    for (let tries=0; tries<5; tries++){
+      const hit = placed.some(r => lx < r.x+r.w+2 && lx+w+2 > r.x && ly < r.y+r.h+2 && ly+h+2 > r.y);
+      if (!hit) break;
+      ly += (fi.dy >= 0 ? 17 : -17);
+    }
+    placed.push({x:lx, y:ly, w, h});
+    tags += `<rect x="${f1(lx)}" y="${f1(ly)}" width="${f1(w)}" height="${h}" rx="7.5" fill="#F2B53A" stroke="#2A1D00" stroke-opacity=".25"/>`;
+    tags += `<text x="${f1(lx+w/2)}" y="${f1(ly+10.8)}" font-size="9" font-weight="700" text-anchor="middle" fill="#2A1D00" font-family="JetBrains Mono, monospace">${fi.label}</text>`;
+  }
+  return rings + tags;
+}
+
+function sceneState(p, si, o){
+  const st = p.steps[si] || {};
+  const shown = new Set();
+  if (o.all) Object.keys(p.els || {}).forEach(id => shown.add(id));
+  else p.steps.slice(0, si+1).forEach(s => (s.add || []).forEach(id => shown.add(id)));
+  return {st, shown, fresh: new Set(o.all ? [] : (st.add || []))};
+}
+
+function zoomBox(p, si){
+  const {st, fresh} = sceneState(p, si, {});
+  const pts = [];
+  (st.focus || []).forEach(f => { const fi = focusInfo(f); pts.push(fi, {x:fi.x+(fi.dx||0), y:fi.y+fi.dy}); });
+  fresh.forEach(id => pts.push(...elPoints(p.els[id])));
+  (st.strips || []).forEach(s => {
+    if (s.rail) pts.push({x:380,y:ROWS[s.rail]},{x:844,y:ROWS[s.rail]});
+    else pts.push(hole(s.col,s.from), hole(s.col,s.to));
+  });
+  const V = p.view;
+  if (!pts.length) return V;
+  let x1 = Math.min(...pts.map(q=>q.x)) - 44, x2 = Math.max(...pts.map(q=>q.x)) + 44;
+  let y1 = Math.min(...pts.map(q=>q.y)) - 40, y2 = Math.max(...pts.map(q=>q.y)) + 40;
+  const A = V[2]/V[3];
+  let w = Math.max(x2-x1, 480), h = Math.max(y2-y1, 200);
+  if (w/h < A) w = h*A; else h = w/A;
+  if (w > V[2] || h > V[3]) return V;
+  let cx = (x1+x2)/2, cy = (y1+y2)/2;
+  let x = Math.min(Math.max(cx - w/2, V[0]), V[0]+V[2]-w);
+  let y = Math.min(Math.max(cy - h/2, V[1]), V[1]+V[3]-h);
+  return [f1(x), f1(y), f1(w), f1(h)];
+}
+
+function scene(p, si, o){
+  o = o || {};
+  const {st, shown, fresh} = sceneState(p, si, o);
+  const anim = o.anim || st.anim || {};
+  const powered = o.all ? true : !!st.powered;
+  let body = drawArduino(powered, anim);
+  if (p.bb) body += drawBreadboard();
+  (st.strips && !o.all ? st.strips : []).forEach(s => body += drawStrip(s));
+  const ids = Object.keys(p.els || {}).filter(id => shown.has(id));
+  const ordered = [...ids.filter(id => p.els[id].type !== 'wire'), ...ids.filter(id => p.els[id].type === 'wire')];
+  for (const id of ordered){
+    const press = st.press && st.press.btn === id && !o.all;
+    body += `<g class="el${fresh.has(id) ? ' is-new' : ''}" data-id="${id}"${press ? ' data-press tabindex="0" role="button" aria-label="Press and hold the push button"' : ''}>${drawEl(p.els[id], anim[id])}</g>`;
+  }
+  if (!o.all && st.focus) body += drawFocus(st.focus);
+  const vb = o.vb || p.view;
+  return `<svg class="scene" viewBox="${vb.join(' ')}" role="img" aria-label="${esc(o.label || 'Wiring diagram')}">${body}</svg>`;
+}
+
+/* ===================== Content ===================== */
+const H = s => `<span class="hole">${s}</span>`;
+
+const CODE = {
+blink:
+`const int LED_PIN = 9;
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);  // LED on
+  delay(1000);                  // wait 1 second
+  digitalWrite(LED_PIN, LOW);   // LED off
+  delay(1000);                  // wait 1 second
+}`,
+fast:
+`void loop() {
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(200);   // was 1000
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(200);   // was 1000
+}`,
+traffic:
+`const int RED = 12;
+const int YELLOW = 11;
+const int GREEN = 10;
+
+void setup() {
+  pinMode(RED, OUTPUT);
+  pinMode(YELLOW, OUTPUT);
+  pinMode(GREEN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(GREEN, HIGH);
+  delay(5000);
+  digitalWrite(GREEN, LOW);
+
+  digitalWrite(YELLOW, HIGH);
+  delay(2000);
+  digitalWrite(YELLOW, LOW);
+
+  digitalWrite(RED, HIGH);
+  delay(5000);
+  digitalWrite(RED, LOW);
+}`,
+button:
+`const int BUTTON_PIN = 2;
+const int LED_PIN = 9;
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  // With INPUT_PULLUP, a pressed button reads LOW
+  if (digitalRead(BUTTON_PIN) == LOW) {
+    digitalWrite(LED_PIN, HIGH);
+  } else {
+    digitalWrite(LED_PIN, LOW);
+  }
+}`,
+distance:
+`const int TRIG_PIN = 9;
+const int ECHO_PIN = 10;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+}
+
+void loop() {
+  // Send a 10-microsecond pulse to start a measurement
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  // Time how long the echo takes (give up after 30 ms)
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+
+  if (duration == 0) {
+    Serial.println("No echo - nothing in range?");
+  } else {
+    float distanceCm = duration * 0.0343 / 2;
+    Serial.print("Distance: ");
+    Serial.print(distanceCm);
+    Serial.println(" cm");
+  }
+  delay(200);
+}`,
+potTest:
+`void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  int potValue = analogRead(A0);  // 0 to 1023
+  Serial.println(potValue);
+  delay(100);
+}`,
+servo:
+`#include <Servo.h>
+
+const int POT_PIN = A0;
+const int SERVO_PIN = 9;
+Servo myServo;
+
+void setup() {
+  myServo.attach(SERVO_PIN);
+}
+
+void loop() {
+  int potValue = analogRead(POT_PIN);          // 0 to 1023
+  int angle = map(potValue, 0, 1023, 0, 180);  // 0 to 180 degrees
+  myServo.write(angle);
+  delay(15);
+}`
+};
+
+const PROJECTS = [
+{
+  id:'setup', num:0, name:'Get your board talking',
+  short:'Install the software, connect your board and upload your first program. No wiring yet.',
+  learn:['Arduino IDE','Boards and ports','Uploading code'], parts:['Arduino Uno or compatible','USB cable'], time:'15 min',
+  view:[0,52,345,262], bb:false, els:{},
+  steps:[
+    { title:'Install the Arduino IDE',
+      body:`<p>The IDE is the free program you use to write code and send it to the board. Download <b>Arduino IDE 2</b> from <b>arduino.cc/en/software</b> and install it like any other app.</p><p>On Windows, say yes if the installer asks to install USB drivers. You'll need them.</p>`,
+      why:`An Arduino has no screen or keyboard. You write code on your computer, the IDE translates it into instructions the board's chip understands, and then sends them over USB.`,
+      check:{q:'Did the IDE open with an empty sketch showing <code>setup()</code> and <code>loop()</code>?',
+        yes:'Your workshop is ready.',
+        no:[['Download it again from arduino.cc','Avoid third-party download sites so you get the current, official version.'],
+            ['Make sure the install finished','On a Mac, drag the app into Applications before opening it. On Windows, restart the computer if the installer asks.']]}},
+    { title:'Plug in the board', focus:['usb','onled'], powered:true,
+      body:`<p>Connect the board to your computer with its USB cable. Uno boards usually use a square USB-B cable, like a printer cable.</p><p>A small green light marked <b>ON</b> should come on.</p>`,
+      tip:`Keep the board on a desk or its box, not on anything metal. Metal under the board can connect pins that shouldn't touch.`,
+      why:`The USB cable does two jobs: it powers the board with 5 volts, and it carries your code to it.`,
+      check:{q:'Is the ON light lit?', yes:'The board has power.',
+        no:[['Try a different cable','Some cables can only charge and have no data wires. Use one you know works with a printer or another board.'],
+            ['Try another USB port','Plug straight into the computer, not a hub or a keyboard.'],
+            ['Check what the board is sitting on','Lift it off any metal, foil or loose wires. If the light still stays off, the board may be faulty. Ask a lab instructor to try it on their computer.']]}},
+    { title:'Pick your board and port', focus:['usb'], powered:true,
+      body:`<p>In the IDE, open <b>Tools → Board → Arduino AVR Boards</b> and choose <b>Arduino Uno</b>.</p><p>Then open <b>Tools → Port</b> and pick the one that mentions Arduino Uno. On Windows it looks like <b>COM3</b>; on a Mac, like <b>/dev/cu.usbmodem…</b> or <b>/dev/cu.usbserial…</b>.</p>`,
+      why:`The board setting tells the IDE which chip to translate your code for. The port tells it which USB connection to send the code through.`,
+      check:{q:'Could you find and select a port?', yes:'The IDE can reach your board.',
+        no:[['Find the right one by unplugging','Unplug the board, open Tools → Port and note the list. Plug it back in and check again. The new entry is your board.'],
+            ['Install the CH340 driver (clone boards)','Many affordable Uno clones use a USB chip marked CH340, near the USB port. Search "CH340 driver" for your operating system, install it, then restart the IDE.'],
+            ['Close other programs using the board','Another IDE window, a Serial Monitor or 3D-printer software can hold the port. Close them and look again.']]}},
+    { title:'Upload your first program', focus:['lled'], powered:true, anim:{lled:'blink'},
+      body:`<p>Open <b>File → Examples → 01.Basics → Blink</b>, then click <b>Upload</b> (the right-pointing arrow at the top left).</p><p>Wait for <b>Done uploading</b> at the bottom. The small light marked <b>L</b> should blink: one second on, one second off.</p>`,
+      why:`The L light is wired to pin 13 inside the board. Blink switches pin 13 on and off, so it tests the IDE, cable, port and board before you wire anything.`,
+      check:{q:'Did it say "Done uploading", and is the L light blinking?', yes:'Your computer and board are talking.',
+        no:[['Read the error message','"Not in sync" or "programmer is not responding" almost always means the wrong board or port. Redo the previous step.'],
+            ['"Port busy" or "access denied"','Close the Serial Monitor and any other program using the board, then upload again.'],
+            ['Using a Nano instead of an Uno?','Choose Tools → Board → Arduino Nano, then Tools → Processor → ATmega328P (Old Bootloader) for most clones.'],
+            ['Blinking, but was it already blinking?','Many boards come with Blink preloaded. The next step proves your own upload worked.']]}},
+    { title:'Make it yours', focus:['lled'], powered:true, anim:{lled:'fast'}, code:'fast', codeName:'Blink (edited)',
+      body:`<p>In the Blink code, change both <code>delay(1000);</code> lines to <code>delay(200);</code> and upload again.</p><p>The L light should now blink quickly.</p>`,
+      why:`<code>delay(1000)</code> pauses for 1000 milliseconds, which is one second. A smaller number means a shorter pause and faster blinking.`,
+      check:{q:'Is it blinking faster now?', yes:'That was your code running on real hardware. You\'re ready to build circuits.',
+        no:[['Change both delays','One controls how long the light is on, the other how long it\'s off.'],
+            ['Check the upload finished','Look for "Done uploading" again. If there\'s an error, the fixes in the previous step apply.']]}}
+  ]
+},
+{
+  id:'first-light', num:1, name:'Light up an LED',
+  short:'Wire your first circuit on a breadboard and make an LED blink.',
+  learn:['How a breadboard connects','LED direction','Why LEDs need resistors'],
+  parts:['Red LED','220 Ω resistor','2 jumper wires','Breadboard'], time:'20 min',
+  view:[0,0,880,395], bb:true,
+  els:{
+    led1:{type:'led', a:[15,'e'], c:[16,'e'], color:'red'},
+    r1:{type:'res', p1:[16,'b'], p2:[18,'tn']},
+    w1:{type:'wire', from:'D9', to:[15,'a'], color:'yellow'},
+    w2:{type:'wire', from:'GND_T', to:[2,'tn'], color:'black'}
+  },
+  steps:[
+    { title:'Meet the breadboard', strips:[{col:5,from:'a',to:'e'},{col:9,from:'f',to:'j'},{rail:'tp'}],
+      body:`<p>Metal strips hidden inside the breadboard connect certain holes. The highlighted holes show the pattern.</p><p>Each short column of five holes is connected: ${H('a–e')} is one group and ${H('f–j')} is another. The gap in the middle keeps the two halves apart.</p><p>The long rows along the edges, marked <b style="color:#D8413B">+</b> and <b style="color:#3B6FD8">−</b>, are connected all the way across. These are the power rails.</p>`,
+      tip:`Some long breadboards split the rails halfway along. If the red or blue line has a break, the two halves aren't connected.`,
+      why:`Putting two legs in the same column connects them, just like twisting wires together. That's how you build circuits without soldering.` },
+    { title:'Place the LED', add:['led1'], focus:[[15,'e'],[16,'e']],
+      body:`<p>Find the LED's <b>longer leg</b>. That's the positive side, called the anode.</p><p>Push the long leg into ${H('e15')} and the short leg into ${H('e16')}.</p>`,
+      tip:`If the legs have been trimmed to the same length, look for the flat edge on the LED's rim. The flat side is the negative (short) leg.`,
+      why:`An LED lets electricity flow only one way, from the long leg to the short leg. If it's backwards it simply won't light. It won't be damaged, so it's safe to flip.`,
+      checklist:['Long leg in e15','Short leg in e16','Both legs pushed in until they stop'] },
+    { title:'Add the resistor', add:['r1'], focus:[[16,'b'],[18,'tn']],
+      body:`<p>Find the resistor with bands <b>red, red, brown</b> (and a gold band). That's 220 Ω.</p><p>Put one leg in ${H('b16')}, the same column as the LED's short leg. Put the other leg in the top <b style="color:#3B6FD8">blue (−) rail</b>, around column 18.</p><p>Resistors work either way round.</p>`,
+      why:`Without a resistor, the LED would draw too much current from the Arduino pin and could burn out the LED or damage the pin. 220 Ω keeps the current around 13 mA: bright, but safe.` },
+    { title:'Connect pin 9', add:['w1'], focus:['D9',[15,'a']],
+      body:`<p>Plug a yellow jumper wire into <b>pin 9</b> on the Arduino's top row of pins.</p><p>Put the other end in ${H('a15')}, the column with the LED's long leg.</p>`,
+      why:`Pin 9 is a switch your code controls. When the code turns it on, it sends 5 volts down this wire to the LED's long leg.` },
+    { title:'Connect ground', add:['w2'], focus:['GND_T',[2,'tn']],
+      body:`<p>Plug a black wire into the <b>GND</b> pin next to pin 13.</p><p>Put the other end in the top <b style="color:#3B6FD8">blue (−) rail</b>, at the far left.</p>`,
+      why:`Electricity needs a complete loop to flow. Ground (GND) is the path back to the Arduino. By habit, black means ground and red means power, so you can read a circuit at a glance.` },
+    { title:'Trace the loop before powering',
+      body:`<p>Before you plug in the USB cable, follow the path with your finger:</p><p>Pin 9 → yellow wire → column 15 → LED → column 16 → resistor → blue rail → black wire → GND.</p><p>A break anywhere in that loop means the LED won't light.</p>`,
+      why:`Checking a circuit before powering it is a habit engineers use on every build. It catches most mistakes while they're still easy to fix.`,
+      checklist:['Yellow wire goes from pin 9 to a15','LED long leg in e15, short leg in e16','Resistor goes from b16 to the blue rail','Black wire goes from GND to the same blue rail'] },
+    { title:'Upload the code', powered:true, code:'blink', codeName:'first_light.ino',
+      body:`<p>Plug in the USB cable. In the IDE, choose <b>File → New Sketch</b>, replace everything with this code, and click <b>Upload</b>.</p>`,
+      why:`<code>pinMode</code> sets pin 9 as an output. Everything inside <code>loop()</code> repeats forever: on, wait one second, off, wait one second.` },
+    { title:'Test it', powered:true, anim:{led1:'blink'},
+      body:`<p>Your LED should turn on for one second, then off for one second, over and over. The diagram shows what to expect.</p>`,
+      check:{q:'Is your LED blinking?', yes:'You built a complete circuit and controlled it with code. Every Arduino project builds on this.',
+        no:[['Check the upload finished','Look for "Done uploading" in the IDE. If you see an error, go back to Get your board talking.'],
+            ['Flip the LED','A backwards LED is the most common reason it stays dark. Swap its legs. This is safe.'],
+            ['Push every leg and wire in firmly','A half-inserted leg doesn\'t touch the metal inside. Press each one until it stops.'],
+            ['Check the rail','The resistor and the black wire must be in the same rail row, and on the same side of any break in the rail.'],
+            ['Test the LED on its own','Move the yellow wire from pin 9 to the 5V pin. If the LED now lights steadily, the circuit is fine and the problem is the code or the pin number. If it stays dark, the problem is the LED, resistor or wiring. Put the wire back on pin 9 afterwards.']]}}
+  ]
+},
+{
+  id:'traffic', num:2, name:'Traffic light',
+  short:'Control three LEDs in a timed sequence, like a real traffic signal.',
+  learn:['Several outputs at once','Timing with delay()','Swap testing'],
+  parts:['Red, yellow and green LEDs','3 × 220 Ω resistors','4 jumper wires'], time:'25 min',
+  view:[0,0,880,395], bb:true,
+  els:{
+    ledR:{type:'led', a:[10,'e'], c:[11,'e'], color:'red'},
+    ledY:{type:'led', a:[15,'e'], c:[16,'e'], color:'yellow'},
+    ledG:{type:'led', a:[20,'e'], c:[21,'e'], color:'green'},
+    rR:{type:'res', p1:[11,'b'], p2:[13,'tn']},
+    rY:{type:'res', p1:[16,'b'], p2:[18,'tn']},
+    rG:{type:'res', p1:[21,'b'], p2:[23,'tn']},
+    wGnd:{type:'wire', from:'GND_T', to:[2,'tn'], color:'black'},
+    wR:{type:'wire', from:'D12', to:[10,'a'], color:'blue'},
+    wY:{type:'wire', from:'D11', to:[15,'a'], color:'purple'},
+    wGr:{type:'wire', from:'D10', to:[20,'a'], color:'orange'}
+  },
+  steps:[
+    { title:'Place three LEDs', add:['ledR','ledY','ledG'], focus:[[10,'e'],[11,'e'],[15,'e'],[16,'e'],[20,'e'],[21,'e']],
+      body:`<p>Same rule as before: long leg on the left.</p><p>Red: long leg ${H('e10')}, short leg ${H('e11')}.<br>Yellow: ${H('e15')} and ${H('e16')}.<br>Green: ${H('e20')} and ${H('e21')}.</p>`,
+      why:`Each LED gets its own columns so the Arduino can control each one separately.`,
+      checklist:['All three long legs are on the left','No two LEDs share a column'] },
+    { title:'Add three resistors', add:['rR','rY','rG'], focus:[[11,'b'],[16,'b'],[21,'b']],
+      body:`<p>Each LED's short-leg column gets its own 220 Ω resistor to the top <b style="color:#3B6FD8">blue (−) rail</b>: from ${H('b11')}, ${H('b16')} and ${H('b21')}.</p>`,
+      why:`Every LED needs its own resistor. If LEDs share one, they compete for current and glow unevenly, or one stays dark.` },
+    { title:'Connect ground', add:['wGnd'], focus:['GND_T',[2,'tn']],
+      body:`<p>Black wire from the <b>GND</b> pin next to pin 13 to the top <b style="color:#3B6FD8">blue (−) rail</b>.</p><p>All three resistors now return to ground through this one wire.</p>`,
+      why:`Parts can share a ground. That's exactly what the rail is for.` },
+    { title:'Wire the red LED', add:['wR'], focus:['D12',[10,'a']],
+      body:`<p>Blue wire from <b>pin 12</b> to ${H('a10')}.</p>`,
+      why:`Signal wire colors are up to you. Just avoid red and black for signals, so you never confuse them with power and ground.` },
+    { title:'Wire the yellow LED', add:['wY'], focus:['D11',[15,'a']],
+      body:`<p>Purple wire from <b>pin 11</b> to ${H('a15')}.</p>` },
+    { title:'Wire the green LED', add:['wGr'], focus:['D10',[20,'a']],
+      body:`<p>Orange wire from <b>pin 10</b> to ${H('a20')}.</p>`,
+      checklist:['Pin 12 → red LED','Pin 11 → yellow LED','Pin 10 → green LED'] },
+    { title:'Upload the code', powered:true, code:'traffic', codeName:'traffic_light.ino',
+      body:`<p>Plug in the board, paste this into a new sketch and click <b>Upload</b>.</p>`,
+      why:`Names like <code>RED</code> make the code easy to read. If you move a wire to a different pin, you only change one line.` },
+    { title:'Test it', powered:true, anim:{ledG:'tlg', ledY:'tly', ledR:'tlr'},
+      body:`<p>Green for 5 seconds, yellow for 2, red for 5, then it repeats. The diagram runs at the same speed as your board.</p>`,
+      check:{q:'Does your light run through green, yellow and red?', yes:'Three outputs, one sequence. Real traffic controllers work the same way, with more rules on top.',
+        no:[['Nothing lights at all','Check the black ground wire and that the upload finished. All three LEDs depend on that one ground wire.'],
+            ['One LED stays dark: swap test','Swap it with an LED that works. If the problem moves with the LED, that LED is backwards or faulty. If the problem stays in the same place, check that spot\'s resistor and signal wire.'],
+            ['The colors come in the wrong order','Two signal wires are swapped. Red should be on pin 12, yellow on 11 and green on 10.'],
+            ['Two LEDs light together','Two legs are probably sharing a column. Each LED needs its own pair of columns.']]}}
+  ]
+},
+{
+  id:'button', num:3, name:'Push-button light',
+  short:'Read a button press and use it to switch an LED.',
+  learn:['Digital inputs','Pull-up resistors','if and else'],
+  parts:['Push button','LED','220 Ω resistor','4 jumper wires'], time:'25 min',
+  view:[0,0,880,395], bb:true,
+  els:{
+    btn:{type:'button', c:10},
+    led:{type:'led', a:[20,'e'], c:[21,'e'], color:'red'},
+    res:{type:'res', p1:[21,'b'], p2:[23,'tn']},
+    wLed:{type:'wire', from:'D9', to:[20,'a'], color:'yellow'},
+    wG:{type:'wire', from:'GND_T', to:[2,'tn'], color:'black'},
+    wBtn:{type:'wire', from:'D2', to:[10,'a'], color:'green'},
+    wBG:{type:'wire', from:[12,'j'], to:'GND_B1', color:'black'}
+  },
+  steps:[
+    { title:'Place the button', add:['btn'], focus:[[10,'e'],[12,'e'],[10,'f'],[12,'f']],
+      body:`<p>The push button has four legs. Place it across the middle gap, with legs in ${H('e10')} and ${H('e12')} on top and ${H('f10')} and ${H('f12')} below.</p><p>It fits snugly only one way. If you have to force it, turn it a quarter turn.</p>`,
+      why:`Inside the button, the legs are joined in pairs. Pressing it connects one pair to the other. Placing it across the gap keeps the pairs apart until you press.` },
+    { title:'Add the LED and resistor', add:['led','res'], focus:[[20,'e'],[21,'e'],[21,'b']],
+      body:`<p>Just like your first circuit: LED long leg in ${H('e20')}, short leg in ${H('e21')}, and a 220 Ω resistor from ${H('b21')} to the top <b style="color:#3B6FD8">blue (−) rail</b>.</p>` },
+    { title:'Wire the LED', add:['wLed','wG'], focus:['D9',[20,'a'],'GND_T',[2,'tn']],
+      body:`<p>Yellow wire from <b>pin 9</b> to ${H('a20')}.</p><p>Black wire from the <b>GND</b> pin next to pin 13 to the top blue rail.</p>` },
+    { title:'Connect the button to pin 2', add:['wBtn'], focus:['D2',[10,'a']],
+      body:`<p>Green wire from <b>pin 2</b> to ${H('a10')}, the column of the button's top-left leg.</p>`,
+      why:`Pin 2 will be an input. Instead of sending voltage out, the Arduino checks whether the pin is connected to ground.` },
+    { title:'Connect the button to ground', add:['wBG'], focus:[[12,'j'],'GND_B1'],
+      body:`<p>Black wire from ${H('j12')} to a <b>GND</b> pin on the Arduino's bottom row.</p>`,
+      why:`The Arduino has several GND pins, all connected inside, so use whichever is closest. Pressing the button now joins pin 2 to ground through opposite corners of the button.` },
+    { title:'Upload the code', powered:true, code:'button', codeName:'button_light.ino',
+      body:`<p>Plug in the board, paste this into a new sketch and click <b>Upload</b>.</p>`,
+      why:`<code>INPUT_PULLUP</code> switches on a resistor inside the chip that holds pin 2 at 5 V, which reads as HIGH. Pressing the button connects the pin to ground, so it reads LOW. That's why the code checks for LOW.` },
+    { title:'Test it', powered:true, press:{btn:'btn', led:'led'},
+      body:`<p>Press and hold the button. The LED should light while you hold it and go off when you let go.</p><p>You can press the button in the diagram too.</p>`,
+      check:{q:'Does the LED follow the button?', yes:'You read your first input. Every sensor project uses this idea: read something, then decide what to do.',
+        no:[['LED is always on','The button is probably turned so its legs are always connected. Rotate it a quarter turn.'],
+            ['LED flickers or acts randomly','Check the code says INPUT_PULLUP, not INPUT. Without the pull-up, the pin "floats" and picks up electrical noise.'],
+            ['LED never lights: test it alone','Move the yellow wire from pin 9 to 5V. If the LED lights, that side is fine, so check the green and black button wires. Put the yellow wire back afterwards.'],
+            ['Check the button wires are on opposite corners','Pin 2 goes to column 10 on the top half, and ground to column 12 on the bottom half. Opposite corners always work.']]}}
+  ]
+},
+{
+  id:'distance', num:4, name:'Distance sensor',
+  short:'Measure distance with sound and read it live on your computer.',
+  learn:['Using a sensor','The Serial Monitor','Timing a pulse'],
+  parts:['HC-SR04 ultrasonic sensor','4 jumper wires'], time:'25 min',
+  view:[0,0,880,395], bb:true,
+  els:{
+    us:{type:'hcsr04', c:18},
+    wV:{type:'wire', from:'5V', to:[18,'e'], color:'red', n2:[0,1]},
+    wGnd:{type:'wire', from:'GND_B1', to:[21,'e'], color:'black', n2:[0,1]},
+    wT:{type:'wire', from:'D9', to:[19,'c'], color:'orange'},
+    wE:{type:'wire', from:'D10', to:[20,'c'], color:'blue'}
+  },
+  steps:[
+    { title:'Place the sensor', add:['us'], focus:[[18,'a'],[19,'a'],[20,'a'],[21,'a']],
+      body:`<p>The sensor has four pins labeled <b>VCC, Trig, Echo, Gnd</b>. Plug them into ${H('a18')}, ${H('a19')}, ${H('a20')} and ${H('a21')}, with the two round "eyes" facing away from the board.</p>`,
+      why:`One eye sends out a click of sound too high for you to hear; the other listens for the echo. The time in between tells you how far away something is.`,
+      checklist:['VCC is in a18','Gnd is in a21'] },
+    { title:'Power the sensor', add:['wV','wGnd'], focus:['5V',[18,'e'],'GND_B1',[21,'e']],
+      body:`<p>Red wire from the Arduino's <b>5V</b> pin (bottom row) to ${H('e18')}.</p><p>Black wire from the <b>GND</b> pin beside it to ${H('e21')}.</p>`,
+      why:`The sensor needs 5 volts to work. Swapping power and ground can damage it, so check these two wires before moving on.` },
+    { title:'Connect Trig', add:['wT'], focus:['D9',[19,'c']],
+      body:`<p>Orange wire from <b>pin 9</b> to ${H('c19')}.</p>`,
+      why:`Trig means trigger. The Arduino sends a tiny pulse here to tell the sensor to click.` },
+    { title:'Connect Echo', add:['wE'], focus:['D10',[20,'c']],
+      body:`<p>Blue wire from <b>pin 10</b> to ${H('c20')}.</p>`,
+      why:`Echo switches on for exactly as long as the sound took to travel out and back. The Arduino times it.` },
+    { title:'Upload the code', powered:true, code:'distance', codeName:'distance_sensor.ino',
+      body:`<p>Plug in the board, paste this into a new sketch and click <b>Upload</b>.</p>`,
+      why:`<code>pulseIn</code> measures how long Echo stays on, in microseconds. Sound travels about 0.0343 cm per microsecond, and it went there and back, so the code divides by 2.` },
+    { title:'Read the distance', powered:true,
+      body:`<p>Click the magnifying glass at the top right of the IDE to open the <b>Serial Monitor</b>. Set the speed menu to <b>9600 baud</b>.</p><p>Hold your hand about 10 cm in front of the sensor and move it slowly.</p>`,
+      expect:`Distance: 10.24 cm\nDistance: 10.31 cm\nDistance: 14.87 cm\nDistance: 21.60 cm`,
+      check:{q:'Do the numbers change as you move your hand?', yes:'You turned an echo into a number. This is how parking sensors and obstacle-avoiding robots see.',
+        no:[['You see garbled symbols','The speeds don\'t match. Set the Serial Monitor to 9600 baud, the same as Serial.begin(9600).'],
+            ['Nothing appears','Check the upload finished and the right port is selected. Try pressing the red reset button on the board.'],
+            ['It always says "No echo"','Trig and Echo may be swapped: pin 9 goes to Trig and pin 10 to Echo. Then check the red and black power wires.'],
+            ['Numbers jump around','Point it at something flat and hard, like a book or wall. Soft or angled surfaces scatter the sound. It works from about 2 cm to 4 m.']]}}
+  ]
+},
+{
+  id:'servo', num:5, name:'Knob-controlled servo',
+  short:'Turn a knob and a motor follows it. Your first input-to-motion build.',
+  learn:['Analog input','map()','Powering motors'],
+  parts:['10 kΩ potentiometer','SG90 servo motor','8 jumper wires'], time:'30 min',
+  view:[0,0,880,470], bb:true,
+  els:{
+    w5:{type:'wire', from:'5V', to:[2,'bp'], color:'red'},
+    wGnd:{type:'wire', from:'GND_B1', to:[3,'bn'], color:'black'},
+    pot:{type:'pot', c:10},
+    wP1:{type:'wire', from:[10,'j'], to:[9,'bn'], color:'black'},
+    wP3:{type:'wire', from:[12,'j'], to:[13,'bp'], color:'red'},
+    wPm:{type:'wire', from:[11,'j'], to:'A0', color:'yellow'},
+    servo:{type:'servo'},
+    wSg:{type:'wire', from:{servo:'gnd'}, to:[19,'bn'], color:'black'},
+    wSv:{type:'wire', from:{servo:'vcc'}, to:[20,'bp'], color:'red'},
+    wSs:{type:'wire', from:{servo:'sig'}, to:'D9', color:'orange'}
+  },
+  steps:[
+    { title:'Power the rails', add:['w5','wGnd'], focus:['5V',[2,'bp'],'GND_B1',[3,'bn']],
+      body:`<p>Two parts need power this time, so share it through the bottom rails.</p><p>Red wire from <b>5V</b> to the bottom <b style="color:#D8413B">red (+) rail</b>. Black wire from <b>GND</b> to the bottom <b style="color:#3B6FD8">blue (−) rail</b>.</p>`,
+      why:`Rails let several parts share power and ground without crowding the Arduino's few power pins.` },
+    { title:'Place the potentiometer', add:['pot'], focus:[[10,'f'],[11,'f'],[12,'f']],
+      body:`<p>The potentiometer is the knob. Put its three legs in ${H('f10')}, ${H('f11')} and ${H('f12')}.</p>`,
+      tip:`If your potentiometer's legs are spaced wider, use any three separate columns and move the next wires to match.`,
+      why:`The outer legs connect to 5 V and ground. The middle leg gives out a voltage anywhere between 0 and 5 V, depending on where the knob is turned.` },
+    { title:'Power the knob', add:['wP1','wP3'], focus:[[10,'j'],[9,'bn'],[12,'j'],[13,'bp']],
+      body:`<p>Black wire from ${H('j10')} to the <b style="color:#3B6FD8">blue (−) rail</b>.</p><p>Red wire from ${H('j12')} to the <b style="color:#D8413B">red (+) rail</b>.</p>` },
+    { title:'Connect the middle leg', add:['wPm'], focus:[[11,'j'],'A0'],
+      body:`<p>Yellow wire from ${H('j11')} to <b>A0</b> on the Arduino's bottom row.</p>`,
+      why:`A0 is an analog pin. Digital pins only read on or off; analog pins measure voltage as a number from 0 to 1023.` },
+    { title:'Test the knob on its own', powered:true, code:'potTest', codeName:'knob_test.ino',
+      body:`<p>Before adding the motor, check the knob works. Upload this, open the Serial Monitor at <b>9600 baud</b> and turn the knob from end to end.</p>`,
+      expect:`0\n0\n214\n587\n901\n1023`,
+      why:`Testing each part alone before combining them is how engineers debug. If the final build misbehaves, you'll already know the knob isn't the problem.`,
+      check:{q:'Does the number move smoothly between 0 and 1023?', yes:'The knob works. Now add the motor.',
+        no:[['Stuck at 0 or at 1023','One of the outer legs isn\'t connected. Check the black wire from j10 and the red wire from j12, and the rail wires to 5V and GND.'],
+            ['Jumps around randomly','The middle wire is loose or not in A0. Press it in firmly at both ends.'],
+            ['Goes from 1023 down to 0','That\'s fine. The outer legs are swapped, which only reverses the direction.']]}},
+    { title:'Connect the servo', add:['servo','wSg','wSv','wSs'], focus:[{servo:'gnd'},{servo:'vcc'},{servo:'sig'},[19,'bn'],[20,'bp'],'D9'],
+      body:`<p>Push three jumper wires into the servo's connector, then follow the servo's wire colors:</p><p><b>Brown</b> to the <b style="color:#3B6FD8">blue (−) rail</b>.<br><b>Red</b> to the <b style="color:#D8413B">red (+) rail</b>.<br><b>Orange</b> to <b>pin 9</b>.</p>`,
+      why:`Servo wires follow a standard: brown or black is ground, red is power, and orange, yellow or white is the signal that sets the angle.` },
+    { title:'Upload the code', powered:true, code:'servo', codeName:'knob_servo.ino',
+      body:`<p>Paste this into a new sketch and click <b>Upload</b>. The Servo library comes with the IDE, so there's nothing extra to install.</p>`,
+      why:`<code>map()</code> converts the knob's 0–1023 range into the servo's 0–180° range.` },
+    { title:'Test it', powered:true, anim:{pot:'sweep-pot', servo:'sweep-horn'},
+      body:`<p>Turn the knob slowly. The servo arm should follow it.</p>`,
+      check:{q:'Does the servo follow the knob?', yes:'Input, processing, output: you read a sensor, did some math and moved something real. That\'s the core loop of every robot.',
+        no:[['The board resets or the servo jitters','The servo is drawing more power than USB can supply. Use a direct USB port on the computer and don\'t hold the arm. Bigger servos need their own power supply, with its ground connected to the Arduino\'s GND.'],
+            ['The servo doesn\'t move at all','Check the orange wire is in pin 9, and the brown and red wires are in the rails that connect to GND and 5V.'],
+            ['It buzzes at the ends','Some servos can\'t quite reach 0° or 180°. Change the map line to map(potValue, 0, 1023, 10, 170).'],
+            ['It turns the opposite way','Swap the wires on j10 and j12, or swap 0 and 180 in the map line.']]}}
+  ]
+}
+];
+
+/* ===================== Parts glossary ===================== */
+const PARTS = [
+  {name:'Arduino Uno', svg:() => `<svg viewBox="0 64 330 244" aria-hidden="true">${drawArduino(true,{})}</svg>`,
+   what:'A small computer that reads inputs like buttons and sensors, and controls outputs like lights and motors, using code you write.',
+   spot:'A teal or blue board with a USB port, a large black chip and rows of pin sockets along two edges.',
+   watch:'Each pin safely supplies about 20 mA. That\'s enough for an LED, not a motor.'},
+  {name:'Breadboard', svg:() => `<svg viewBox="356 70 512 292" aria-hidden="true">${drawBreadboard()}</svg>`,
+   what:'Lets you build and change circuits without soldering.',
+   spot:'A white plastic board full of holes, with red and blue lines along the edges.',
+   watch:'Columns a–e and f–j are separate halves. Long boards sometimes split the rails in the middle.'},
+  {name:'Jumper wires', svg:() => `<svg viewBox="0 0 90 70" aria-hidden="true"><path d="M10 60 C10 10, 60 10, 60 55" stroke="${WIRE.red}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M22 60 C22 22, 75 22, 75 55" stroke="${WIRE.black}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M34 60 C34 34, 50 30, 50 58" stroke="${WIRE.yellow}" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`,
+   what:'Connect holes on the breadboard to each other and to the Arduino\'s pins.',
+   spot:'Colored wires with a metal pin on each end.',
+   watch:'Use red for power and black for ground. Wires do break inside; if nothing makes sense, swap the wire.'},
+  {name:'LED', svg:() => `<svg viewBox="12 40 52 44" aria-hidden="true">${drawLED({x:30,y:78},{x:46,y:78},LEDC.red)}</svg>`,
+   what:'Lights up when current flows through it the right way.',
+   spot:'The long leg is positive (anode). A flat edge on the rim marks the negative leg (cathode).',
+   watch:'Always pair it with a resistor. Without one it can burn out in seconds.'},
+  {name:'Resistor', svg:() => `<svg viewBox="0 30 90 40" aria-hidden="true">${drawRes({x:8,y:50},{x:82,y:50})}</svg>`,
+   what:'Limits how much current flows through part of a circuit.',
+   spot:'A small cylinder with colored bands. 220 Ω is red, red, brown. 10 kΩ is brown, black, orange.',
+   watch:'It works either way round.'},
+  {name:'Push button', svg:() => `<svg viewBox="6 6 62 62" aria-hidden="true">${drawButton({x:21,y:21})}</svg>`,
+   what:'Connects its two sides only while you press it.',
+   spot:'A small square with four legs and a round cap.',
+   watch:'The legs are joined in pairs inside. Place it across the breadboard\'s middle gap.'},
+  {name:'Potentiometer', svg:() => `<svg viewBox="0 8 68 76" aria-hidden="true">${drawPot({x:18,y:22})}</svg>`,
+   what:'A knob that outputs a voltage you can adjust smoothly.',
+   spot:'Three legs and a shaft or screw slot that turns.',
+   watch:'Outer legs go to 5V and GND; the middle leg goes to an analog pin like A0.'},
+  {name:'HC-SR04 distance sensor', svg:() => `<svg viewBox="6 18 124 104" aria-hidden="true">${drawUS({x:44,y:114})}</svg>`,
+   what:'Measures distance with ultrasound, from about 2 cm to 4 m.',
+   spot:'A blue board with two silver "eyes" and four pins.',
+   watch:'Needs 5 V. Soft or angled surfaces give unreliable readings.'},
+  {name:'SG90 servo', svg:() => `<svg viewBox="0 6 166 64" aria-hidden="true">${drawServo(10,38)}</svg>`,
+   what:'A motor that turns to an exact angle between 0° and 180°.',
+   spot:'A small blue box with a three-wire cable: brown, red and orange.',
+   watch:'It can draw more current than USB can supply. If the board resets, suspect power first.'}
+];
+
+/* ===================== State ===================== */
+const KEY = 'jumper.progress.v1';
+function loadProg(){ try { const v = JSON.parse(localStorage.getItem(KEY)); if (v && v.done && v.at) return v; } catch(e){} return {done:{}, at:{}}; }
+function saveProg(){ try { localStorage.setItem(KEY, JSON.stringify(prog)); } catch(e){} }
+let prog = loadProg();
+const checks = {};
+const ticks = {};
+let zoom = true;
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+const byId = id => PROJECTS.find(p => p.id === id);
+
+/* ===================== Views ===================== */
+function viewHome(){
+  const next = PROJECTS.find(p => !prog.done[p.id]);
+  const started = Object.keys(prog.at).length > 0;
+  const cta = next
+    ? `<a class="btn btn-primary" href="#/p/${next.id}/${prog.at[next.id] || 1}">${started ? 'Continue: ' + esc(next.name) : 'Start with setup'}</a>`
+    : `<a class="btn btn-primary" href="#/p/servo/1">Build them again</a>`;
+  const demo = byId('first-light');
+  const rows = PROJECTS.map(p => {
+    const done = !!prog.done[p.id], at = prog.at[p.id];
+    const status = done ? '<span class="status is-done">Done ✓</span>' : at ? `<span class="status">Continue at step ${at}</span>` : `<span class="status">${p.time}</span>`;
+    return `<li class="${done ? 'done' : ''}"><a href="#/p/${p.id}/${!done && at ? at : 1}">
+      <span class="num" aria-hidden="true">${p.num}</span>
+      <span><h3>${esc(p.name)}</h3><p class="desc">${esc(p.short)}</p>
+        <span class="meta">${p.learn.map(l => `<span class="chip">${esc(l)}</span>`).join('')}</span></span>
+      ${status}</a></li>`;
+  }).join('');
+  return `
+  <section class="hero">
+    <div>
+      <h1>Your first Arduino projects, one wire at a time.</h1>
+      <p>A setup guide and five beginner builds. Every step shows exactly which hole to use, explains why, and helps you find the problem when something doesn't work.</p>
+      <div class="btn-row">${cta}<a class="btn btn-quiet" href="#/parts">Meet your parts</a></div>
+    </div>
+    <div>
+      <div class="mat">${scene(demo, demo.steps.length-1, {all:true, anim:{led1:'blink'}, label:'A finished LED circuit with the LED blinking'})}</div>
+      <p class="hero-cap">Project 1, finished: pin 9 blinks an LED through a 220 Ω resistor.</p>
+    </div>
+  </section>
+  <section>
+    <div class="section-head"><h2>Build them in order</h2><p>Each project uses a skill from the one before.</p></div>
+    <ol class="path">${rows}</ol>
+  </section>
+  <div class="foot"><span>Progress is saved in this browser.</span><button class="linkbtn" data-action="reset">Reset progress</button></div>`;
+}
+
+function viewParts(){
+  return `
+  <section style="padding-top:12px">
+    <div class="section-head"><h2>Meet your parts</h2><p>What each part does, how to recognize it, and what to watch out for.</p></div>
+    <div class="parts">${PARTS.map(pt => `
+      <article class="part"><div class="mat">${pt.svg()}</div>
+        <div><h3>${esc(pt.name)}</h3><dl><dt>What it does</dt><dd>${esc(pt.what)}</dd><dt>How to spot it</dt><dd>${esc(pt.spot)}</dd><dt>Watch out</dt><dd>${esc(pt.watch)}</dd></dl></div>
+      </article>`).join('')}
+    </div>
+  </section>`;
+}
+
+function viewProject(p, si){
+  const st = p.steps[si], n = p.steps.length, key = p.id + ':' + si;
+  const vb = zoom && p.bb ? zoomBox(p, si) : p.view;
+  const stepper = p.steps.map((s,i) => `<a href="#/p/${p.id}/${i+1}" class="${i < si ? 'is-past' : ''}" ${i === si ? 'aria-current="step"' : ''} aria-label="Step ${i+1}: ${esc(s.title)}">${i+1}</a>`).join('');
+  let html = `<div class="stepper" role="navigation" aria-label="Steps">${stepper}</div>
+    <p class="count">Step ${si+1} of ${n}</p><h2 id="step-title" tabindex="-1">${esc(st.title)}</h2>
+    <div class="body">${st.body}</div>`;
+  if (st.tip) html += `<p class="tip">${st.tip}</p>`;
+  if (st.code) html += `<div class="code"><div class="code-bar"><span>${esc(st.codeName || 'sketch.ino')}</span><button data-action="copy" data-code="${st.code}">Copy code</button></div><pre><code>${esc(CODE[st.code])}</code></pre></div>`;
+  if (st.expect) html += `<div class="expect"><h3>What you should see</h3><pre>${esc(st.expect)}</pre></div>`;
+  if (st.checklist) html += `<ul class="checklist">${st.checklist.map((c,i) => `<li><label><input type="checkbox" data-tick="${key}:${i}" ${ticks[key+':'+i] ? 'checked' : ''}><span>${esc(c)}</span></label></li>`).join('')}</ul>`;
+  if (st.why) html += `<details class="why"><summary>Why?</summary><div>${st.why}</div></details>`;
+  if (st.check){
+    const r = checks[key];
+    const isLast = si === n-1;
+    let res = '';
+    if (r === 'yes'){
+      res = `<p class="win">${esc(st.check.yes)}</p>`;
+      if (isLast){
+        const idx = PROJECTS.indexOf(p), nx = PROJECTS[idx+1];
+        res += `<p>Project complete.</p><div class="btn-row">${nx ? `<a class="btn btn-primary" href="#/p/${nx.id}/1">Next project: ${esc(nx.name)}</a>` : `<a class="btn btn-primary" href="#/">See all projects</a>`}</div>`;
+      }
+    } else if (r === 'no'){
+      res = `<p>Work through these in order. Most problems are found in the first two.</p>
+        <ol class="fixes">${st.check.no.map(([t,d]) => `<li><b>${esc(t)}</b><span>${esc(d)}</span></li>`).join('')}</ol>
+        <button class="btn btn-yes" data-action="yes" data-key="${key}">It works now</button>`;
+    }
+    html += `<div class="check ${r ? 'is-'+r : ''}"><p class="check-q">${st.check.q}</p>
+      ${r ? '' : `<div class="btn-row"><button class="btn btn-yes" data-action="yes" data-key="${key}">Yes, it works</button><button class="btn btn-quiet" data-action="no" data-key="${key}">No, something's off</button></div>`}
+      <div class="result" aria-live="polite">${res}</div></div>`;
+  }
+  const prev = si > 0 ? `<a class="btn btn-quiet" href="#/p/${p.id}/${si}">Back</a>` : `<a class="btn btn-quiet" href="#/">All projects</a>`;
+  const next = si < n-1 ? `<a class="btn btn-primary" href="#/p/${p.id}/${si+2}">Next step</a>` : '';
+  html += `<div class="stepnav">${prev}${next}</div>`;
+
+  const wires = p.bb ? `<div class="legend"><span><i style="background:${WIRE.red}"></i>Power (5V)</span><span><i style="background:${WIRE.black}"></i>Ground (GND)</span><span><i style="background:#F2B53A;height:10px;width:10px;border-radius:50%"></i>This step</span></div>` : '';
+  return `<div class="work">
+    <div class="bench">
+      <div class="bench-bar"><span class="crumb"><a href="#/">Projects</a> / <b>${esc(p.name)}</b></span>
+        ${p.bb ? `<button class="btn btn-quiet" style="padding:6px 12px;font-size:14px" data-action="zoom" aria-pressed="${zoom}">${zoom ? 'Show whole board' : 'Zoom to this step'}</button>` : ''}</div>
+      <div class="mat">${scene(p, si, {vb, label: 'Wiring diagram for step ' + (si+1) + ': ' + st.title})}</div>
+      ${wires}
+    </div>
+    <section class="panel" aria-labelledby="step-title">${html}</section>
+  </div>`;
+}
+
+/* ===================== Router ===================== */
+const app = document.getElementById('app');
+let lastRoute = '';
+function render(){
+  const h = location.hash.replace(/^#\/?/, '');
+  const parts = h.split('/');
+  let navKey = 'home';
+  if (parts[0] === 'p' && byId(parts[1])){
+    const p = byId(parts[1]);
+    let si = Math.max(1, Math.min(p.steps.length, parseInt(parts[2], 10) || 1)) - 1;
+    if (!prog.done[p.id]) { prog.at[p.id] = si+1; saveProg(); }
+    app.innerHTML = viewProject(p, si);
+    document.title = `${p.name}: step ${si+1} | Jumper`;
+    bindPress(p, si);
+  } else if (parts[0] === 'parts'){
+    navKey = 'parts';
+    app.innerHTML = viewParts();
+    document.title = 'Meet your parts | Jumper';
+  } else {
+    app.innerHTML = viewHome();
+    document.title = 'Jumper: your first Arduino projects';
+  }
+  document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav === navKey) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  if (h !== lastRoute){ window.scrollTo(0,0); lastRoute = h; }
+}
+
+function bindPress(p, si){
+  const st = p.steps[si];
+  if (!st.press) return;
+  const svg = app.querySelector('.bench svg');
+  const btn = svg && svg.querySelector('[data-press]');
+  const led = svg && svg.querySelector(`[data-id="${st.press.led}"]`);
+  if (!btn || !led) return;
+  const on = e => { if (e) e.preventDefault(); svg.classList.add('pressed'); led.classList.add('lit'); };
+  const off = () => { svg.classList.remove('pressed'); led.classList.remove('lit'); };
+  btn.addEventListener('pointerdown', on);
+  ['pointerup','pointerleave','pointercancel'].forEach(t => btn.addEventListener(t, off));
+  btn.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') on(e); });
+  btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') off(); });
+}
+
+app.addEventListener('click', e => {
+  const b = e.target.closest('[data-action]');
+  if (!b) return;
+  const act = b.dataset.action;
+  if (act === 'copy'){
+    const text = CODE[b.dataset.code];
+    const done = () => { b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy code', 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+    else fallbackCopy(text, done);
+  } else if (act === 'yes' || act === 'no'){
+    const key = b.dataset.key;
+    checks[key] = act;
+    const [pid, si] = key.split(':');
+    const p = byId(pid);
+    if (act === 'yes' && +si === p.steps.length-1){ prog.done[pid] = true; delete prog.at[pid]; saveProg(); }
+    const y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
+  } else if (act === 'zoom'){
+    zoom = !zoom;
+    const y = window.scrollY; render(); window.scrollTo(0, y);
+  } else if (act === 'reset'){
+    if (confirm('Clear your saved progress for all projects?')){ prog = {done:{}, at:{}}; saveProg(); render(); }
+  }
+});
+app.addEventListener('change', e => {
+  const t = e.target.closest('[data-tick]');
+  if (t) ticks[t.dataset.tick] = t.checked;
+});
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch(e){}
+  ta.remove();
+}
+
+window.addEventListener('hashchange', render);
+render();
+</script>
+</body>
+</html>

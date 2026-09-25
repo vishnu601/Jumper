@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens (spec 9), ported from jumper.html:11-30.
+ *
+ * The palette lives on :root as raw CSS variables and is mapped into Tailwind's
+ * theme below, so a utility like `bg-panel` resolves through the variable. Dark
+ * mode therefore works by redefining the variables once — no `dark:` variant on
+ * every element, and the SVG diagram picks up the same values.
+ */
+:root {
+  --bg: #eef2f5;
+  --panel: #ffffff;
+  --ink: #15202b;
+  --muted: #56687a;
+  --line: #d5dde4;
+  --line-strong: #b9c5cf;
+  --mat: #2c5873;
+  --accent: #f2b53a;
+  --on-accent: #2a1d00;
+  --ok: #2e8f5b;
+  --bad: #c9463d;
+  --link: #1d6ba6;
+  --code-bg: #0f1a24;
+  --code-ink: #d8e4ef;
+
+  /* Rail markings on the breadboard, and rail references in prose. */
+  --rail-plus: #d8413b;
+  --rail-minus: #3b6fd8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151b;
+    --panel: #17212a;
+    --ink: #e5ecf2;
+    --muted: #98a8b6;
+    --line: #2a3743;
+    --line-strong: #3c4c5a;
+    --mat: #1f4459;
+    --ok: #4cc38a;
+    --bad: #f07167;
+    --link: #72b8ec;
+    --code-bg: #0a1118;
+    /* Lifted for contrast against the dark panel; the breadboard silkscreen
+       keeps its own printed colours inside the SVG. */
+    --rail-plus: #f07167;
+    --rail-minus: #72b8ec;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f151b;
+  --panel: #17212a;
+  --ink: #e5ecf2;
+  --muted: #98a8b6;
+  --line: #2a3743;
+  --line-strong: #3c4c5a;
+  --mat: #1f4459;
+  --ok: #4cc38a;
+  --bad: #f07167;
+  --link: #72b8ec;
+  --code-bg: #0a1118;
+  --rail-plus: #f07167;
+  --rail-minus: #72b8ec;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-mat: var(--mat);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-ok: var(--ok);
+  --color-bad: var(--bad);
+  --color-link: var(--link);
+  --color-code-bg: var(--code-bg);
+  --color-code-ink: var(--code-ink);
+  --color-rail-plus: var(--rail-plus);
+  --color-rail-minus: var(--rail-minus);
+
+  --font-head: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-atkinson), "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-head);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/*
+ * The "Why?" disclosure chevron (jumper.html:132-135). Drawn in CSS rather
+ * than as an icon so it rotates with the open state and inherits the text
+ * colour. Without it the summary reads as a heading, not a control.
+ */
+.why > summary::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+  flex: none;
+}
+
+.why[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .why > summary::before {
+    transition: none;
+  }
+}

@@ -1,0 +1,86 @@
+/*
+ * Diagram animations and SVG state classes, ported from jumper.html:50-78.
+ *
+ * These stay in plain CSS rather than Tailwind: they are keyframe animations
+ * and descendant selectors reaching into SVG children, which utilities express
+ * badly or not at all. Layout and typography elsewhere are Tailwind's job.
+ */
+
+.mat {
+  background-color: var(--mat);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1.2px);
+  background-size: 14px 14px;
+  border-radius: 16px;
+  padding: 10px;
+}
+
+svg.scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 62vh;
+}
+
+/* An element placed in the current step glows, so "what changed" is obvious. */
+.el.is-new {
+  filter: drop-shadow(0 0 3px rgba(242, 181, 58, 1)) drop-shadow(0 0 6px rgba(242, 181, 58, 0.7));
+}
+
+.led-glow {
+  opacity: 0;
+}
+
+.lit .led-glow {
+  opacity: 1;
+}
+
+.a-blink {
+  animation: blink 2s step-end infinite;
+}
+
+.a-fast {
+  animation: blink 0.4s step-end infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.ring-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ring 1.6s ease-out infinite;
+}
+
+@keyframes ring {
+  0% {
+    transform: scale(0.7);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+/*
+ * Spec 7.3: respect prefers-reduced-motion with static "on" states. A student
+ * who cannot tolerate motion still needs to see what success looks like, so
+ * the LED shows lit rather than simply not animating.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .a-blink,
+  .a-fast {
+    animation: none;
+    opacity: 1;
+  }
+
+  .ring-pulse {
+    animation: none;
+  }
+}
