@@ -8,7 +8,7 @@ from content data, so the picture can never drift from the instructions.
 
 **Status: V0 — the guided builder works end to end.** Two projects, a component glossary,
 a real breadboard connectivity model and a deterministic electrical rules engine.
-The troubleshooting module (Jumper Fix) is specified but not built — see [docs/](docs/).
+The troubleshooting module (Jumper Fix) is designed but not built — see [docs/](docs/).
 
 ---
 
@@ -71,8 +71,6 @@ a board, a part or a project.
 ## Docs
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — layers, data flow, extension points
-- [`jumper-build-prompt.md`](jumper-build-prompt.md) — the product spec V0 was built from
-- [`docs/prompts/fix-mode.md`](docs/prompts/fix-mode.md) — spec for the troubleshooting module
 - [`docs/fix/M1-proposal.md`](docs/fix/M1-proposal.md) — diagnosis engine design, awaiting review
 - [`docs/kit/proposal.md`](docs/kit/proposal.md) — board database and part inventory
 - [`docs/fix/vision-proposal.md`](docs/fix/vision-proposal.md) — photo-based circuit check

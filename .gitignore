@@ -48,3 +48,7 @@ next-env.d.ts
 
 # local visual-comparison screenshots (regenerable dev artifacts)
 /.shots/
+
+# private product specs — kept locally, never published
+/jumper-build-prompt.md
+/docs/prompts/

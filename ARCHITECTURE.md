@@ -166,7 +166,7 @@ circuit that triggers it. Messages say what happened *and* what to do; never "so
 
 Specified in `docs/`, not built:
 
-- **Jumper Fix** (`docs/prompts/fix-mode.md`, `docs/fix/M1-proposal.md`) — guided diagnosis for a
+- **Jumper Fix** (`docs/fix/M1-proposal.md`) — guided diagnosis for a
   circuit that's already built and not working. A deterministic engine scores candidate faults from
   probe answers; all diagnostic knowledge is content. Static checks on pasted code, errors and
   serial output feed the same engine, as do rules-engine findings.
